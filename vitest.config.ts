@@ -6,5 +6,7 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['tests/helpers/db.ts'],
     testTimeout: 15000,
+    pool: 'forks',
+    poolOptions: { forks: { singleFork: true } },
   },
 })
