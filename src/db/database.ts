@@ -10,4 +10,4 @@ export function createDb(connectionString: string): Kysely<Database> {
   })
 }
 
-export const db = createDb(process.env.DATABASE_URL ?? 'postgresql://localhost:5432/blotato')
+export const db = createDb(process.env.DATABASE_URL ?? 'postgresql://localhost:5432/social-media-integrator')
