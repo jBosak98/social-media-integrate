@@ -3,11 +3,24 @@ import { buildTwitterClient } from './twitter-api.client'
 
 type TwitterAdapterConfig = {
   bearerToken: string
+  apiKey: string
+  apiSecret: string
+  accessToken: string
+  accessTokenSecret: string
   baseUrl: string
 }
 
 export function buildTwitterAdapter(config: TwitterAdapterConfig): PlatformAdapter {
   const client = buildTwitterClient(config)
+  let cachedAuthorName: string | null = null
+
+  async function getAuthorName(): Promise<string> {
+    if (!cachedAuthorName) {
+      const me = await client.getMe()
+      cachedAuthorName = me.data.name
+    }
+    return cachedAuthorName
+  }
 
   return {
     platform: 'twitter',
@@ -33,11 +46,14 @@ export function buildTwitterAdapter(config: TwitterAdapterConfig): PlatformAdapt
     },
 
     async postReply(platformCommentId: string, body: string): Promise<RawComment> {
-      const posted = await client.postTweet(body, platformCommentId)
+      const [posted, authorName] = await Promise.all([
+        client.postTweet(body, platformCommentId),
+        getAuthorName(),
+      ])
       return {
         platformCommentId: posted.data.id,
         platformParentCommentId: platformCommentId,
-        authorName: 'me',
+        authorName,
         body: posted.data.text,
         publishedAt: new Date(),
       }

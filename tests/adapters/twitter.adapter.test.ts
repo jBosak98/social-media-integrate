@@ -28,7 +28,7 @@ describe('TwitterAdapter', () => {
           meta: { newest_id: 'tweet-456', oldest_id: 'tweet-456', result_count: 1 },
         })
 
-      const adapter = buildTwitterAdapter({ bearerToken: BEARER, baseUrl: BASE_URL })
+      const adapter = buildTwitterAdapter({ bearerToken: BEARER, apiKey: 'key', apiSecret: 'secret', accessToken: 'token', accessTokenSecret: 'token_secret', baseUrl: BASE_URL })
       const comments = await adapter.fetchComments('tweet-123')
 
       expect(comments).toHaveLength(1)
@@ -61,7 +61,7 @@ describe('TwitterAdapter', () => {
           meta: { result_count: 1 },
         })
 
-      const adapter = buildTwitterAdapter({ bearerToken: BEARER, baseUrl: BASE_URL })
+      const adapter = buildTwitterAdapter({ bearerToken: BEARER, apiKey: 'key', apiSecret: 'secret', accessToken: 'token', accessTokenSecret: 'token_secret', baseUrl: BASE_URL })
       const comments = await adapter.fetchComments('tweet-123')
 
       expect(comments[0].platformParentCommentId).toBe('tweet-456')
@@ -73,7 +73,7 @@ describe('TwitterAdapter', () => {
         .query(true)
         .reply(200, { meta: { result_count: 0 } })
 
-      const adapter = buildTwitterAdapter({ bearerToken: BEARER, baseUrl: BASE_URL })
+      const adapter = buildTwitterAdapter({ bearerToken: BEARER, apiKey: 'key', apiSecret: 'secret', accessToken: 'token', accessTokenSecret: 'token_secret', baseUrl: BASE_URL })
       const comments = await adapter.fetchComments('tweet-123')
 
       expect(comments).toHaveLength(0)
@@ -84,6 +84,7 @@ describe('TwitterAdapter', () => {
     it('posts a reply and returns a normalized RawComment', async () => {
       nock(BASE_URL)
         .post('/2/tweets', (body) => body.reply?.in_reply_to_tweet_id === 'tweet-456')
+        .matchHeader('Authorization', /OAuth oauth_consumer_key/)
         .reply(201, {
           data: {
             id: 'tweet-999',
@@ -92,22 +93,10 @@ describe('TwitterAdapter', () => {
         })
 
       nock(BASE_URL)
-        .get('/2/tweets/tweet-999')
-        .query(true)
-        .reply(200, {
-          data: {
-            id: 'tweet-999',
-            text: 'My reply',
-            author_id: 'me-1',
-            created_at: '2024-01-01T11:00:00Z',
-            referenced_tweets: [{ type: 'replied_to', id: 'tweet-456' }],
-          },
-          includes: {
-            users: [{ id: 'me-1', name: 'Me' }],
-          },
-        })
+        .get('/2/users/me')
+        .reply(200, { data: { id: 'me-1', name: 'Me' } })
 
-      const adapter = buildTwitterAdapter({ bearerToken: BEARER, baseUrl: BASE_URL })
+      const adapter = buildTwitterAdapter({ bearerToken: BEARER, apiKey: 'key', apiSecret: 'secret', accessToken: 'token', accessTokenSecret: 'token_secret', baseUrl: BASE_URL })
       const reply = await adapter.postReply('tweet-456', 'My reply')
 
       expect(reply).toMatchObject({
@@ -122,11 +111,12 @@ describe('TwitterAdapter', () => {
     it('creates a tweet and returns platformPostId', async () => {
       nock(BASE_URL)
         .post('/2/tweets', (body) => body.text === 'Hello Twitter' && !body.reply)
+        .matchHeader('Authorization', /OAuth oauth_consumer_key/)
         .reply(201, {
           data: { id: 'tweet-new-1', text: 'Hello Twitter' },
         })
 
-      const adapter = buildTwitterAdapter({ bearerToken: BEARER, baseUrl: BASE_URL })
+      const adapter = buildTwitterAdapter({ bearerToken: BEARER, apiKey: 'key', apiSecret: 'secret', accessToken: 'token', accessTokenSecret: 'token_secret', baseUrl: BASE_URL })
       const result = await adapter.publishPost('Hello Twitter')
 
       expect(result.platformPostId).toBe('tweet-new-1')

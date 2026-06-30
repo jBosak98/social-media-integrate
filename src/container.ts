@@ -22,9 +22,14 @@ export function buildContainer(db: Kysely<Database>): Container {
 
   const adapters: AdapterRegistry = new Map()
   adapters.set('stub', stubAdapter)
-  if (process.env.TWITTER_BEARER_TOKEN) {
+  const twitterVars = ['TWITTER_BEARER_TOKEN', 'TWITTER_API_KEY', 'TWITTER_API_SECRET', 'TWITTER_ACCESS_TOKEN', 'TWITTER_ACCESS_TOKEN_SECRET']
+  if (twitterVars.every((v) => process.env[v])) {
     adapters.set('twitter', buildTwitterAdapter({
       bearerToken: config.twitter.bearerToken,
+      apiKey: config.twitter.apiKey,
+      apiSecret: config.twitter.apiSecret,
+      accessToken: config.twitter.accessToken,
+      accessTokenSecret: config.twitter.accessTokenSecret,
       baseUrl: config.twitter.baseUrl,
     }))
   }
