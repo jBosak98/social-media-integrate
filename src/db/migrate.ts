@@ -2,6 +2,8 @@ import path from 'path'
 import { promises as fs } from 'fs'
 import { FileMigrationProvider, Migrator } from 'kysely'
 import { db } from './database'
+// Load environment variables from .env file for DATABASE_URL
+import 'dotenv/config'
 
 async function migrateToLatest(): Promise<void> {
   const migrator = new Migrator({
